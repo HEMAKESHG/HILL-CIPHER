@@ -25,59 +25,95 @@ STEP-5: Combine all these groups to get the complete cipher text.
 
 ## PROGRAM 
 ~~~
-
 import numpy as np
 
 def text_to_numbers(text):
-    return [ord(char) - ord('A') for char in text]
+    return [ord(char) - ord('A') for char in text.upper()]
 
 def numbers_to_text(numbers):
-    return ''.join(chr(num + ord('A')) for num in numbers)
+    return ''.join(chr(int(num) + ord('A')) for num in numbers)
+
+def mod_inverse(a, m):
+    # Extended Euclidean Algorithm for modular inverse
+    a = a % m
+    for x in range(1, m):
+        if (a * x) % m == 1:
+            return x
+    raise ValueError("No modular inverse exists")
+
+def matrix_mod_inv(matrix, modulus):
+    n = matrix.shape[0]
+    det = int(round(np.linalg.det(matrix))) % modulus
+    det_inv = mod_inverse(det, modulus)
+
+    # Find matrix of cofactors
+    cofactors = np.zeros((n, n), dtype=int)
+    for row in range(n):
+        for col in range(n):
+            minor = np.delete(np.delete(matrix, row, axis=0), col, axis=1)
+            cofactor = int(round(np.linalg.det(minor)))
+            sign = (-1) ** (row + col)
+            cofactors[row, col] = (sign * cofactor) % modulus
+
+    # Adjugate = transpose of cofactor matrix
+    adjugate = cofactors.T % modulus
+
+    # Modular inverse matrix
+    return (det_inv * adjugate) % modulus
+
 
 def hill_cipher_encrypt(plaintext, key):
     n = len(key)
     plaintext = plaintext.upper().replace(" ", "")
+    
+    # Padding with 'X' if not divisible by matrix size
     while len(plaintext) % n != 0:
-        plaintext += 'X'  # Padding with 'X'
+        plaintext += 'X'
     
     text_numbers = text_to_numbers(plaintext)
     key_matrix = np.array(key)
-    
+
     encrypted_numbers = []
     for i in range(0, len(text_numbers), n):
         block = np.array(text_numbers[i:i+n]).reshape(n, 1)
         encrypted_block = np.dot(key_matrix, block) % 26
         encrypted_numbers.extend(encrypted_block.flatten())
-    
+
     return numbers_to_text(encrypted_numbers)
 
 def hill_cipher_decrypt(ciphertext, key):
     n = len(key)
     key_matrix = np.array(key)
-    key_inverse = np.linalg.inv(key_matrix) * np.linalg.det(key_matrix)
-    key_inverse = np.round(key_inverse).astype(int) % 26  # Modular inverse approximation
-    
+    inverse_matrix = matrix_mod_inv(key_matrix, 26).astype(int)
+
     text_numbers = text_to_numbers(ciphertext)
     decrypted_numbers = []
+
     for i in range(0, len(text_numbers), n):
         block = np.array(text_numbers[i:i+n]).reshape(n, 1)
-        decrypted_block = np.dot(key_inverse, block) % 26
+        decrypted_block = np.dot(inverse_matrix, block) % 26
         decrypted_numbers.extend(decrypted_block.flatten())
-    
+
     return numbers_to_text(decrypted_numbers)
 
+# ==== Driver Code ====
 if __name__ == "__main__":
     plaintext = input("Enter plaintext: ")
-    key = [[6, 24, 1], [13, 16, 10], [20, 17, 15]]  # Example key matrix
+    key = [[6, 24, 1], 
+           [13, 16, 10], 
+           [20, 17, 15]]  # 3x3 key matrix
+    
     ciphertext = hill_cipher_encrypt(plaintext, key)
     print("Encrypted Text:", ciphertext)
+    
     decrypted_text = hill_cipher_decrypt(ciphertext, key)
     print("Decrypted Text:", decrypted_text)
 
 ~~~
 ## OUTPUT
 
-![image](https://github.com/user-attachments/assets/cb7cfbdb-b1ee-41a9-b55e-a751ffa33501)
+![image](https://github.com/user-attachments/assets/635de09d-7d7a-4752-8cb9-9fc9ba8d7fd5)
+
 
 ## RESULT
 Thus, a python program is implement for hill cipher substitution techniques.
