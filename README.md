@@ -81,6 +81,10 @@ def hill_cipher_encrypt(plaintext, key):
 
     return numbers_to_text(encrypted_numbers)
 
+def remove_padding(text):
+    return text.rstrip('X')  # Note: Be careful if original text ends in 'X'
+
+
 def hill_cipher_decrypt(ciphertext, key):
     n = len(key)
     key_matrix = np.array(key)
@@ -93,7 +97,7 @@ def hill_cipher_decrypt(ciphertext, key):
         block = np.array(text_numbers[i:i+n]).reshape(n, 1)
         decrypted_block = np.dot(inverse_matrix, block) % 26
         decrypted_numbers.extend(decrypted_block.flatten())
-
+    
     return numbers_to_text(decrypted_numbers)
 
 # ==== Driver Code ====
@@ -107,12 +111,15 @@ if __name__ == "__main__":
     print("Encrypted Text:", ciphertext)
     
     decrypted_text = hill_cipher_decrypt(ciphertext, key)
+    decrypted_text = remove_padding(decrypted_text)
     print("Decrypted Text:", decrypted_text)
+
 
 ~~~
 ## OUTPUT
 
-![image](https://github.com/user-attachments/assets/635de09d-7d7a-4752-8cb9-9fc9ba8d7fd5)
+![image](https://github.com/user-attachments/assets/d90ad287-9c72-4133-ac49-998f9b4940a5)
+
 
 
 ## RESULT
